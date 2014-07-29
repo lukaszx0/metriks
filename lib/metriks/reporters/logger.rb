@@ -1,53 +1,20 @@
-require 'logger'
 require 'metriks/time_tracker'
+require 'logger'
 
-module Metriks::Reporter
-  class Logger
+module Metriks::Reporters
+  class Logger < Metriks::Reporter
     attr_accessor :prefix, :log_level, :logger
 
     def initialize(options = {})
+      options[:prefix] ||= 'metriks:'
+
+      super(options)
+
       @logger    = options[:logger]    || ::Logger.new(STDOUT)
       @log_level = options[:log_level] || ::Logger::INFO
-      @prefix    = options[:prefix]    || 'metriks:'
-
-      @registry     = options[:registry] || Metriks::Registry.default
-      @time_tracker = Metriks::TimeTracker.new(options[:interval] || 60)
-      @on_error     = options[:on_error] || proc { |ex| }
-    end
-
-    def start
-      @thread ||= Thread.new do
-        loop do
-          @time_tracker.sleep
-
-          begin
-            write
-          rescue Exception => ex
-            @on_error[ex] rescue nil
-          end
-        end
-      end
-    end
-
-    def stop
-      @thread.kill if @thread
-      @thread = nil
-    end
-
-    def restart
-      stop
-      start
-    end
-
-    def flush
-      if !@last_write || @last_write.min != Time.now.min
-        write
-      end
     end
 
     def write
-      @last_write = Time.now
-
       @registry.each do |name, metric|
         case metric
         when Metriks::Meter

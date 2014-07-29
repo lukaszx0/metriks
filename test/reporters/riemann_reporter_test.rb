@@ -1,13 +1,13 @@
 require 'test_helper'
 require 'thread_error_handling_tests'
 
-require 'metriks/reporter/riemann'
+require 'metriks/reporters/riemann'
 
 class RiemannReporterTest < Test::Unit::TestCase
   include ThreadErrorHandlingTests
 
   def build_reporter(options={})
-    Metriks::Reporter::Riemann.new({
+    Metriks::Reporters::Riemann.new({
       :host => "foo",
       :port => 1234,
       :registry => @registry,

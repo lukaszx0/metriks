@@ -1,49 +1,20 @@
+require 'metriks/reporter'
 require 'socket'
 
-module Metriks::Reporter
-  class Graphite
+module Metriks::Reporters
+  class Graphite < Metriks::Reporter
     attr_reader :host, :port
 
     def initialize(host, port, options = {})
+      super(options)
+
       @host = host
       @port = port
-
-      @prefix = options[:prefix]
-
-      @registry  = options[:registry] || Metriks::Registry.default
-      @interval  = options[:interval] || 60
-      @on_error  = options[:on_error] || proc { |ex| }
     end
 
     def socket
       @socket = nil if @socket && @socket.closed?
       @socket ||= TCPSocket.new(@host, @port)
-    end
-
-    def start
-      @thread ||= Thread.new do
-        loop do
-          sleep @interval
-
-          Thread.new do
-            begin
-              write
-            rescue Exception => ex
-              @on_error[ex] rescue nil
-            end
-          end
-        end
-      end
-    end
-
-    def stop
-      @thread.kill if @thread
-      @thread = nil
-    end
-
-    def restart
-      stop
-      start
     end
 
     def write

@@ -1,4 +1,3 @@
-
 module Metriks
   VERSION = '0.9.9.6'
 
@@ -32,4 +31,4 @@ module Metriks
 end
 
 require 'metriks/registry'
-require 'metriks/reporter/proc_title'
+require 'metriks/reporters/proc_title'

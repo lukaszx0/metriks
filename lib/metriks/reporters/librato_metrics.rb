@@ -1,46 +1,16 @@
-require 'metriks/time_tracker'
+require 'metriks/reporter'
 require 'net/https'
 
-module Metriks::Reporter
-  class LibratoMetrics
+module Metriks::Reporters
+  class LibratoMetrics < Metriks::Reporter
     attr_accessor :prefix, :source
 
     def initialize(email, token, options = {})
+      super(options)
+
       @email = email
       @token = token
-
-      @prefix = options[:prefix]
       @source = options[:source]
-
-      @registry  = options[:registry] || Metriks::Registry.default
-      @time_tracker = Metriks::TimeTracker.new(options[:interval] || 60)
-      @on_error  = options[:on_error] || proc { |ex| }
-    end
-
-    def start
-      @thread ||= Thread.new do
-        loop do
-          @time_tracker.sleep
-
-          Thread.new do
-            begin
-              write
-            rescue Exception => ex
-              @on_error[ex] rescue nil
-            end
-          end
-        end
-      end
-    end
-
-    def stop
-      @thread.kill if @thread
-      @thread = nil
-    end
-
-    def restart
-      stop
-      start
     end
 
     def write

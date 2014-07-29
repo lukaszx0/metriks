@@ -1,18 +1,21 @@
 require 'test_helper'
 require 'thread_error_handling_tests'
 
-require 'metriks/reporter/librato_metrics'
+require 'metriks/reporters/graphite'
 
-class LibratoMetricsReporterTest < Test::Unit::TestCase
+class GraphiteReporterTest < Test::Unit::TestCase
   include ThreadErrorHandlingTests
 
   def build_reporter(options={})
-    Metriks::Reporter::LibratoMetrics.new('user', 'password', { :registry => @registry }.merge(options))
+    Metriks::Reporters::Graphite.new('localhost', 3333, { :registry => @registry }.merge(options))
   end
 
   def setup
     @registry = Metriks::Registry.new
     @reporter = build_reporter
+    @stringio = StringIO.new
+
+    @reporter.stubs(:socket).returns(@stringio)
   end
 
   def teardown
@@ -26,10 +29,13 @@ class LibratoMetricsReporterTest < Test::Unit::TestCase
     @registry.timer('timer.testing').update(1.5)
     @registry.histogram('histogram.testing').update(1.5)
     @registry.utilization_timer('utilization_timer.testing').update(1.5)
-    @registry.gauge('gauge.testing') { 123 }
-
-    @reporter.expects(:submit)
+    @registry.gauge('gauge.testing').set(123)
+    @registry.gauge('gauge.testing.block') { 456 }
 
     @reporter.write
+
+    assert_match /timer.testing.median \d/, @stringio.string
+    assert_match /gauge.testing.value 123/, @stringio.string
+    assert_match /gauge.testing.block.value 456/, @stringio.string
   end
 end

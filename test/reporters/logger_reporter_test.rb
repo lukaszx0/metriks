@@ -2,13 +2,13 @@ require 'test_helper'
 require 'thread_error_handling_tests'
 
 require 'logger'
-require 'metriks/reporter/logger'
+require 'metriks/reporters/logger'
 
 class LoggerReporterTest < Test::Unit::TestCase
   include ThreadErrorHandlingTests
 
   def build_reporter(options={})
-    Metriks::Reporter::Logger.new({ :registry => @registry, :logger => @logger }.merge(options))
+    Metriks::Reporters::Logger.new({ :registry => @registry, :logger => @logger }.merge(options))
   end
 
   def setup
@@ -41,6 +41,8 @@ class LoggerReporterTest < Test::Unit::TestCase
 
   def test_flush
     @reporter.flush
+
+    sleep 0.02 # let wait for thread to finish
 
     assert_match /time=\d/, @stringio.string
     assert_match /median=\d/, @stringio.string
